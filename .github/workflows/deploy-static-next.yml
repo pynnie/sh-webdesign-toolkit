@@ -74,24 +74,52 @@ jobs:
           folder: out
           clean: true
 
-      - name: Checkout toolkit scripts
-        uses: actions/checkout@v4
-        with:
-          repository: pynnie/sh-webdesign-toolkit
-          ref: ${{ inputs.toolkit_ref }}
-          path: .sh-toolkit
-          sparse-checkout: .github/scripts
-          sparse-checkout-cone-mode: false
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Call deploy webhook
         if: success()
         env:
           WEBHOOK_URL: ${{ vars[inputs.webhook_var] }}
           WEBHOOK_SKIP_IF_EMPTY: ${{ inputs.webhook_skip_if_empty }}
+          PAYLOAD_BRANCH_KEY: ${{ inputs.webhook_payload_branch_key }}
+          TARGET_BRANCH: ${{ inputs.target_branch }}
         run: |
           payload=$(printf '{"repo":"%s","source_branch":"%s","%s":"%s","sha":"%s"}' \
             "${GITHUB_REPOSITORY}" "${GITHUB_REF_NAME}" \
-            "${{ inputs.webhook_payload_branch_key }}" "${{ inputs.target_branch }}" \
+            "${PAYLOAD_BRANCH_KEY}" "${TARGET_BRANCH}" \
             "${GITHUB_SHA}")
-          bash .sh-toolkit/.github/scripts/call-deploy-webhook.sh "$payload"
+          # Inlined webhook caller with retry/backoff (no private-repo checkout needed)
+          if [ -z "${WEBHOOK_URL:-}" ]; then
+            if [ "${WEBHOOK_SKIP_IF_EMPTY:-false}" = "true" ]; then
+              echo "WEBHOOK_URL not set, skipping webhook."
+              exit 0
+            fi
+            echo "WEBHOOK_URL required"
+            exit 1
+          fi
+
+          MAX_ATTEMPTS="${WEBHOOK_MAX_ATTEMPTS:-5}"
+          wait_seconds="${WEBHOOK_INITIAL_WAIT_SECONDS:-15}"
+          CONNECT_TIMEOUT="${WEBHOOK_CONNECT_TIMEOUT:-30}"
+          MAX_TIME="${WEBHOOK_MAX_TIME:-120}"
+
+          for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+            echo "Webhook attempt ${attempt}/${MAX_ATTEMPTS}..."
+            if curl --fail-with-body -sS -X POST \
+              --connect-timeout "$CONNECT_TIMEOUT" \
+              --max-time "$MAX_TIME" \
+              -H 'Content-Type: application/json' \
+              -d "$payload" \
+              "$WEBHOOK_URL"; then
+              echo "Webhook succeeded on attempt ${attempt}."
+              exit 0
+            fi
+            echo "Webhook attempt ${attempt} failed."
+            if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+              echo "Retrying in ${wait_seconds}s..."
+              sleep "$wait_seconds"
+              wait_seconds=$((wait_seconds * 2))
+              [ "$wait_seconds" -gt 120 ] && wait_seconds=120
+            fi
+          done
+
+          echo "Webhook failed after ${MAX_ATTEMPTS} attempts."
+          exit 1
