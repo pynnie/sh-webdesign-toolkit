@@ -38,9 +38,9 @@ Alle referenzieren `pynnie/sh-webdesign-toolkit/.github/workflows/...@v1`.
 
 ## 6. GitHub Repo-Einstellungen
 
-1. **Settings → General → Allow auto-merge** aktivieren
-2. **Branch protection auf `main`:**
-   - Required checks: `ci / quality`, `ci / smoke` (Job-Namen aus Toolkit-CI)
+1. **Dependabot-Merge:** `dependabot-auto-merge.yml` merged nach grünem CI — **kein** GitHub Pro / Allow auto-merge nötig (siehe [github-settings.md](github-settings.md))
+2. **Branch protection auf `main`** (optional, Plan-abhängig):
+   - Required checks: `ci / quality`, `ci / smoke`
    - Require branches to be up to date before merging
 3. Plesk: Git-Deployment auf Branch `deploy` (Prod) bzw. `preview` (Staging)
 
