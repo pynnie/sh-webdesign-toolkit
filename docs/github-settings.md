@@ -23,6 +23,15 @@ Ohne das schlagen Site-Workflows mit „workflow file issue“ fehl (0s Laufzeit
 
 Der Merge passiert in **`ci.yml`**: Job `merge-dependabot` läuft nach grünem `ci`-Job, nur bei Dependabot-PRs, und merged per `pulls.merge` (squash).
 
+Der Job braucht **`workflows: write`**, wenn Dependabot auch `.github/workflows/*` ändert (z. B. `github-actions`-Gruppe).
+
+**Settings → Actions → General → Workflow permissions:** **Read and write permissions** (nicht nur Read). Oder per API:
+
+```bash
+gh api -X PUT repos/pynnie/REPO/actions/permissions/workflow \
+  -f default_workflow_permissions=write
+```
+
 ## Branch Protection auf `main` (optional)
 
 **Settings → Branches** — Required checks nach erstem CI-Lauf:
