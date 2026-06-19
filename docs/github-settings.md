@@ -2,29 +2,39 @@
 
 Diese Schritte können nicht per Code im Toolkit gesetzt werden. Pro Site-Repo in GitHub UI ausführen.
 
+## Toolkit-Zugriff (einmalig, Pflicht für private Repos)
+
+Reusable Workflows aus `pynnie/sh-webdesign-toolkit` brauchen Freigabe:
+
+**GitHub UI:** `sh-webdesign-toolkit` → Settings → Actions → General → Access → **Accessible from repositories owned by 'pynnie' user**
+
+**Oder per API:**
+
+```bash
+gh api -X PUT repos/pynnie/sh-webdesign-toolkit/actions/permissions/access \
+  -f access_level=user
+```
+
+Ohne das schlagen Site-Workflows mit „workflow file issue“ fehl (0s Laufzeit).
+
 ## Dependabot-Merge ohne GitHub Pro
 
-**GitHub Native Auto-Merge** (Settings → Allow auto-merge) ist auf **privaten Free-Repos nicht verfügbar** bzw. setzt Pro/Team voraus.
+**GitHub Native Auto-Merge** ist auf privaten Free-Repos nicht nötig.
 
-Stattdessen merged `.github/workflows/dependabot-auto-merge.yml` Dependabot-PRs **direkt per Action**, sobald der **CI**-Workflow auf dem PR erfolgreich durchgelaufen ist. Dafür ist **kein** Auto-Merge-Toggle nötig.
+Der Merge passiert in **`ci.yml`**: Job `merge-dependabot` läuft nach grünem `ci`-Job, nur bei Dependabot-PRs, und merged per `pulls.merge` (squash).
 
-Optional kannst du Branch Protection aktivieren (abhängig vom GitHub-Plan). Der Merge-Workflow ist unabhängig davon die eigentliche Sicherheits-Schranke: Merge nur nach grünem CI.
+## Branch Protection auf `main` (optional)
 
-## Branch Protection auf `main` (optional, Plan-abhängig)
+**Settings → Branches** — Required checks nach erstem CI-Lauf:
 
-**Settings → Branches → Add branch protection rule**:
+- `ci / quality`
+- `ci / smoke`
 
-- Branch name pattern: `main`
-- **Require status checks to pass before merging** (Namen nach erstem CI-Lauf prüfen):
-  - `ci / quality` (lint, typecheck, build)
-  - `ci / smoke` (Playwright)
-- **Require branches to be up to date before merging**: empfohlen
-
-Auf Free-Accounts mit privaten Repos greift Branch Protection ggf. eingeschränkt — der `dependabot-auto-merge`-Workflow wartet trotzdem auf erfolgreiches CI (`workflow_run`).
+Auf Free-Accounts greift Branch Protection eingeschränkt; der Merge-Job in CI ist die eigentliche Schranke.
 
 ## Dependabot
 
-**Settings → Code security → Dependabot** — Alerts und Security Updates aktiviert lassen.
+**Settings → Code security → Dependabot** — Alerts aktiv lassen.
 
 ## Repo-Variablen
 
@@ -35,6 +45,4 @@ Auf Free-Accounts mit privaten Repos greift Branch Protection ggf. eingeschränk
 
 ## Toolkit Tag `v1`
 
-Site-Repos referenzieren `@v1` in `uses: pynnie/sh-webdesign-toolkit/...`.
-
-Bei Breaking Changes im Toolkit: neues Tag setzen und Site-Repos anpassen.
+Site-Repos referenzieren `@v1`. Bei Breaking Changes neues Tag setzen.

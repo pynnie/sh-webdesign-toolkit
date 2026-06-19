@@ -82,6 +82,7 @@ jobs:
           path: .sh-toolkit
           sparse-checkout: .github/scripts
           sparse-checkout-cone-mode: false
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Call deploy webhook
         if: success()
