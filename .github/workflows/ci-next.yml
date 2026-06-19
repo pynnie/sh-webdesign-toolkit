@@ -15,10 +15,6 @@ on:
         description: Run Playwright smoke tests against the static export
         type: boolean
         default: false
-      toolkit_ref:
-        description: Git ref of sh-webdesign-toolkit for smoke workflow
-        type: string
-        default: v1
 
 jobs:
   quality:

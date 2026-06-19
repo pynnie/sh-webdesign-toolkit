@@ -10,7 +10,6 @@ Zentralisierte Build- und Deploy-Toolchain für alle SH WebDesign Website-Repos 
 | `.github/workflows/deploy-preview-static-next.yml` | Preview: build → `preview` → Webhook |
 | `.github/workflows/ci-next.yml` | lint + typecheck + build (+ optional Smoke) |
 | `.github/workflows/smoke-playwright.yml` | Playwright gegen Static Export |
-| `.github/scripts/call-deploy-webhook.sh` | Webhook mit Retry/Backoff |
 | `.github/dependabot.yml` | Vorlage für Site-Repos |
 | `.github/templates/` | Dünne Workflows zum Kopieren |
 | `docs/onboarding-new-site.md` | Neue Site anlegen |

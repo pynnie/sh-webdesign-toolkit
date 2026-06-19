@@ -27,10 +27,6 @@ on:
         description: JSON key for target branch in webhook payload
         type: string
         default: deploy_branch
-      toolkit_ref:
-        description: Git ref of sh-webdesign-toolkit for webhook script
-        type: string
-        default: v1
       disable_jekyll:
         description: Create out/.nojekyll before publish
         type: boolean
