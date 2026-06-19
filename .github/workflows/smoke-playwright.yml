@@ -1,0 +1,55 @@
+name: Playwright smoke tests
+
+on:
+  workflow_call:
+    inputs:
+      node_version:
+        description: Node.js version
+        type: string
+        default: "22"
+      artifact_name:
+        description: Name of the uploaded static export artifact
+        type: string
+        default: static-export
+      serve_port:
+        description: Port for serving the static export
+        type: string
+        default: "4173"
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout site
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download static export
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: out
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run smoke tests
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:${{ inputs.serve_port }}
+        run: |
+          npx serve out -l ${{ inputs.serve_port }} &
+          for i in $(seq 1 30); do
+            if curl -sf "http://127.0.0.1:${{ inputs.serve_port }}/" >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          npx playwright test

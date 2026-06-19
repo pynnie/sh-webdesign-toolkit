@@ -1,2 +1,33 @@
 # sh-webdesign-toolkit
-Zentralisierte Build Tools für alle Website von SH WebDesign
+
+Zentralisierte Build- und Deploy-Toolchain für alle SH WebDesign Website-Repos (Next.js Static Export).
+
+## Enthalten
+
+| Pfad | Zweck |
+|------|-------|
+| `.github/workflows/deploy-static-next.yml` | Prod: build → `deploy` → Webhook |
+| `.github/workflows/deploy-preview-static-next.yml` | Preview: build → `preview` → Webhook |
+| `.github/workflows/ci-next.yml` | lint + typecheck + build (+ optional Smoke) |
+| `.github/workflows/smoke-playwright.yml` | Playwright gegen Static Export |
+| `.github/scripts/call-deploy-webhook.sh` | Webhook mit Retry/Backoff |
+| `.github/dependabot.yml` | Vorlage für Site-Repos |
+| `.github/templates/` | Dünne Workflows zum Kopieren |
+| `docs/onboarding-new-site.md` | Neue Site anlegen |
+| `docs/github-settings.md` | Manuelle GitHub-Einstellungen |
+
+## Site-Repo einbinden
+
+```yaml
+# .github/workflows/deploy.yml
+jobs:
+  deploy:
+    uses: pynnie/sh-webdesign-toolkit/.github/workflows/deploy-static-next.yml@v1
+    secrets: inherit
+```
+
+Siehe [docs/onboarding-new-site.md](docs/onboarding-new-site.md).
+
+## Versionierung
+
+Breaking Changes: neues Tag (`v2`). Sites pinnt `@v1` bis Migration.

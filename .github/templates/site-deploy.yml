@@ -1,0 +1,18 @@
+name: Build and publish static export
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    uses: pynnie/sh-webdesign-toolkit/.github/workflows/deploy-static-next.yml@v1
+    secrets: inherit

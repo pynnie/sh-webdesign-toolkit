@@ -1,0 +1,23 @@
+name: Build and publish preview static export
+
+on:
+  push:
+    branches:
+      - "feature*"
+      - "feature/**"
+      - "cursor/*"
+      - "cursor/**"
+      - "dependabot/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-preview
+  cancel-in-progress: true
+
+jobs:
+  deploy-preview:
+    uses: pynnie/sh-webdesign-toolkit/.github/workflows/deploy-preview-static-next.yml@v1
+    secrets: inherit

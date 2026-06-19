@@ -1,0 +1,96 @@
+name: Deploy static Next.js export
+
+on:
+  workflow_call:
+    inputs:
+      node_version:
+        description: Node.js version for build
+        type: string
+        default: "22"
+      build_env_json:
+        description: Optional JSON object of env vars for the build step
+        type: string
+        default: ""
+      target_branch:
+        description: Branch to publish static export to
+        type: string
+        default: deploy
+      webhook_var:
+        description: Repository variable name containing the deploy webhook URL
+        type: string
+        default: DEPLOY_WEBHOOK_URL
+      webhook_skip_if_empty:
+        description: Skip webhook call when URL variable is unset
+        type: boolean
+        default: false
+      webhook_payload_branch_key:
+        description: JSON key for target branch in webhook payload
+        type: string
+        default: deploy_branch
+      toolkit_ref:
+        description: Git ref of sh-webdesign-toolkit for webhook script
+        type: string
+        default: v1
+      disable_jekyll:
+        description: Create out/.nojekyll before publish
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout site
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: npm
+
+      - name: Apply build environment
+        if: inputs.build_env_json != ''
+        run: |
+          echo '${{ inputs.build_env_json }}' | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> "$GITHUB_ENV"
+
+      - name: Install
+        run: npm ci
+
+      - name: Build (Next.js export)
+        run: npm run build
+
+      - name: Disable Jekyll
+        if: inputs.disable_jekyll
+        run: touch out/.nojekyll
+
+      - name: Publish to target branch
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: ${{ inputs.target_branch }}
+          folder: out
+          clean: true
+
+      - name: Checkout toolkit scripts
+        uses: actions/checkout@v4
+        with:
+          repository: pynnie/sh-webdesign-toolkit
+          ref: ${{ inputs.toolkit_ref }}
+          path: .sh-toolkit
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: false
+
+      - name: Call deploy webhook
+        if: success()
+        env:
+          WEBHOOK_URL: ${{ vars[inputs.webhook_var] }}
+          WEBHOOK_SKIP_IF_EMPTY: ${{ inputs.webhook_skip_if_empty }}
+        run: |
+          payload=$(printf '{"repo":"%s","source_branch":"%s","%s":"%s","sha":"%s"}' \
+            "${GITHUB_REPOSITORY}" "${GITHUB_REF_NAME}" \
+            "${{ inputs.webhook_payload_branch_key }}" "${{ inputs.target_branch }}" \
+            "${GITHUB_SHA}")
+          bash .sh-toolkit/.github/scripts/call-deploy-webhook.sh "$payload"

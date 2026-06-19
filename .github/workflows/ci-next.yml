@@ -1,0 +1,66 @@
+name: CI Next.js site
+
+on:
+  workflow_call:
+    inputs:
+      node_version:
+        description: Node.js version for build
+        type: string
+        default: "22"
+      build_env_json:
+        description: Optional JSON object of env vars for the build step
+        type: string
+        default: ""
+      run_smoke_tests:
+        description: Run Playwright smoke tests against the static export
+        type: boolean
+        default: false
+      toolkit_ref:
+        description: Git ref of sh-webdesign-toolkit for smoke workflow
+        type: string
+        default: v1
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout site
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: npm
+
+      - name: Apply build environment
+        if: inputs.build_env_json != ''
+        run: |
+          echo '${{ inputs.build_env_json }}' | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> "$GITHUB_ENV"
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload static export
+        if: inputs.run_smoke_tests
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-export
+          path: out/
+          if-no-files-found: error
+
+  smoke:
+    needs: quality
+    if: inputs.run_smoke_tests
+    uses: pynnie/sh-webdesign-toolkit/.github/workflows/smoke-playwright.yml@v1
+    with:
+      node_version: ${{ inputs.node_version }}
