@@ -2,28 +2,20 @@
 
 Diese Schritte können nicht per Code im Toolkit gesetzt werden. Pro Site-Repo in GitHub UI ausführen.
 
-## Toolkit-Zugriff (einmalig, Pflicht für private Repos)
+## Toolkit-Zugriff für Dependabot (Pflicht)
 
-Reusable Workflows aus `pynnie/sh-webdesign-toolkit` brauchen Freigabe:
+Das Toolkit `pynnie/sh-webdesign-toolkit` ist **public**. Grund: Dependabot-PRs (`pull_request`-Event) laufen mit einem eingeschränkten read-only Token und können **private** Reusable Workflows nicht auflösen → Site-CI scheitert in 0s („workflow file issue"). Ein public Toolkit löst das ohne Zugriffs-Gefrickel (enthält keine Secrets, nur CI/Deploy-YAML).
 
-**GitHub UI:** `sh-webdesign-toolkit` → Settings → Actions → General → Access → **Accessible from repositories owned by 'pynnie' user**
-
-**Oder per API:**
-
-```bash
-gh api -X PUT repos/pynnie/sh-webdesign-toolkit/actions/permissions/access \
-  -f access_level=user
-```
-
-Ohne das schlagen Site-Workflows mit „workflow file issue“ fehl (0s Laufzeit).
+Falls das Toolkit doch privat sein muss: entweder CI pro Site inlinen (kein privater Reusable-Call im Dependabot-Lauf) oder `access_level=user` setzen — letzteres reicht aber **nicht** für den Dependabot-`pull_request`-Kontext.
 
 ## Dependabot-Merge ohne GitHub Pro
 
 **GitHub Native Auto-Merge** ist auf privaten Free-Repos nicht nötig.
 
-Der Merge passiert in **`ci.yml`**: Job `merge-dependabot` läuft nach grünem `ci`-Job, nur bei Dependabot-PRs, und merged per `pulls.merge` (squash).
+Der Merge passiert in **`ci.yml`**: Job `merge-dependabot` läuft nach grünem `ci`-Job, nur bei Dependabot-PRs, und merged per `pulls.merge` (squash). Job-Permissions: `contents: write` + `pull-requests: write`.
 
-Der Job braucht **`workflows: write`**, wenn Dependabot auch `.github/workflows/*` ändert (z. B. `github-actions`-Gruppe).
+> [!warning] Kein `workflows: write` im permissions-Block
+> `workflows` ist **kein gültiger `permissions`-Scope** — ein solcher Key macht die komplette Workflow-Datei ungültig (0s „workflow file issue"). Bumpt Dependabot `.github/workflows/*` (github-actions-Gruppe) und der Merge scheitert mit 403 „without workflows permission", löst das **nicht** ein Job-Permission, sondern das Repo-Setting unten.
 
 **Settings → Actions → General → Workflow permissions:** **Read and write permissions** (nicht nur Read). Oder per API:
 
