@@ -8,8 +8,7 @@ Zentralisierte Build- und Deploy-Toolchain für alle SH WebDesign Website-Repos 
 |------|-------|
 | `.github/workflows/deploy-static-next.yml` | Prod: build → `deploy` → Webhook |
 | `.github/workflows/deploy-preview-static-next.yml` | Preview: build → `preview` → Webhook |
-| `.github/workflows/ci-next.yml` | lint + typecheck + build (+ optional Smoke) |
-| `.github/workflows/smoke-playwright.yml` | Playwright gegen Static Export |
+| `.github/workflows/ci-next.yml` | lint + typecheck + build (+ optional Playwright-Smoke im selben Job) |
 | `.github/dependabot.yml` | Dependabot-Config des Toolkits (nur github-actions) |
 | `.github/templates/` | Dünne Workflows + `dependabot.yml` zum Kopieren in Site-Repos |
 | `docs/onboarding-new-site.md` | Neue Site anlegen |

@@ -31,8 +31,7 @@ gh api -X PUT repos/pynnie/REPO/actions/permissions/workflow \
 
 **Settings → Branches** — Required checks nach erstem CI-Lauf:
 
-- `ci / quality`
-- `ci / smoke`
+- `ci / quality` (enthält Lint, Typecheck, Build und Playwright-Smoke)
 
 Auf Free-Accounts greift Branch Protection eingeschränkt; der Merge-Job in CI ist die eigentliche Schranke.
 

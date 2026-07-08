@@ -15,6 +15,10 @@ on:
         description: Run Playwright smoke tests against the static export
         type: boolean
         default: false
+      serve_port:
+        description: Port for serving the static export during smoke tests
+        type: string
+        default: "4173"
 
 jobs:
   quality:
@@ -46,18 +50,23 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Upload static export
+      # Smoke runs in this job (not a separate one) so the static export never
+      # has to be uploaded as an artifact — that avoids the Actions storage
+      # quota entirely on the private Free plan.
+      - name: Install Playwright browsers
         if: inputs.run_smoke_tests
-        uses: actions/upload-artifact@v4
-        with:
-          name: static-export
-          path: out/
-          if-no-files-found: error
-          retention-days: 1
+        run: npx playwright install --with-deps chromium
 
-  smoke:
-    needs: quality
-    if: inputs.run_smoke_tests
-    uses: pynnie/sh-webdesign-toolkit/.github/workflows/smoke-playwright.yml@v1
-    with:
-      node_version: ${{ inputs.node_version }}
+      - name: Run smoke tests
+        if: inputs.run_smoke_tests
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:${{ inputs.serve_port }}
+        run: |
+          npx serve out -l ${{ inputs.serve_port }} &
+          for i in $(seq 1 30); do
+            if curl -sf "http://127.0.0.1:${{ inputs.serve_port }}/" >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          npx playwright test

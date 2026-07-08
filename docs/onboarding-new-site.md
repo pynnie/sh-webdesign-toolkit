@@ -43,7 +43,7 @@ Alle referenzieren `pynnie/sh-webdesign-toolkit/.github/workflows/...@v1`.
 1. **Toolkit-Zugriff** in `sh-webdesign-toolkit` setzen (siehe [github-settings.md](github-settings.md))
 2. **Dependabot-Merge** läuft automatisch in `ci.yml` — kein GitHub Pro nötig
 3. **Branch protection auf `main`** (optional, Plan-abhängig):
-   - Required checks: `ci / quality`, `ci / smoke`
+   - Required checks: `ci / quality` (Lint, Typecheck, Build, Smoke)
    - Require branches to be up to date before merging
 4. Plesk: Git-Deployment auf Branch `deploy` (Prod) bzw. `preview` (Staging)
 
