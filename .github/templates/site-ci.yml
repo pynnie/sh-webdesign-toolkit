@@ -24,14 +24,25 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      actions: write
     steps:
-      - name: Merge Dependabot PR
-        uses: actions/github-script@v7
+      - name: Merge Dependabot PR and trigger deploy
+        uses: actions/github-script@v9
         with:
           script: |
+            const base = context.payload.pull_request.base.ref;
             await github.rest.pulls.merge({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: context.payload.pull_request.number,
               merge_method: 'squash',
+            });
+            // A merge performed with GITHUB_TOKEN does not emit a push event,
+            // so the deploy workflow must be dispatched explicitly on the base
+            // branch. Krüger uses 'deploy-strato-ftps.yml' instead of 'deploy.yml'.
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy.yml',
+              ref: base,
             });

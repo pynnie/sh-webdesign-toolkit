@@ -12,7 +12,10 @@ Falls das Toolkit doch privat sein muss: entweder CI pro Site inlinen (kein priv
 
 **GitHub Native Auto-Merge** ist auf privaten Free-Repos nicht nötig.
 
-Der Merge passiert in **`ci.yml`**: Job `merge-dependabot` läuft nach grünem `ci`-Job, nur bei Dependabot-PRs, und merged per `pulls.merge` (squash). Job-Permissions: `contents: write` + `pull-requests: write`.
+Der Merge passiert in **`ci.yml`**: Job `merge-dependabot` läuft nach grünem `ci`-Job, nur bei Dependabot-PRs, und merged per `pulls.merge` (squash). Job-Permissions: `contents: write` + `pull-requests: write` + `actions: write`.
+
+> [!warning] Deploy nach Auto-Merge muss explizit angestoßen werden
+> Ein Merge per `GITHUB_TOKEN` löst **kein** `push`-Event aus (GitHub-Anti-Rekursions-Schutz) → der `deploy.yml`-Workflow auf `main` startet sonst nie. Der `merge-dependabot`-Job dispatcht deshalb nach dem Merge `deploy.yml` per `actions.createWorkflowDispatch` (dafür `actions: write`). Krüger-Sites müssen dort `deploy-strato-ftps.yml` als `workflow_id` setzen.
 
 > [!warning] Kein `workflows: write` im permissions-Block
 > `workflows` ist **kein gültiger `permissions`-Scope** — ein solcher Key macht die komplette Workflow-Datei ungültig (0s „workflow file issue"). Bumpt Dependabot `.github/workflows/*` (github-actions-Gruppe) und der Merge scheitert mit 403 „without workflows permission", löst das **nicht** ein Job-Permission, sondern das Repo-Setting unten.

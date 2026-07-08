@@ -21,13 +21,16 @@ Aus [`sh-webdesign-toolkit/.github/templates/`](../.github/templates/) nach `.gi
 
 - `site-deploy.yml` → `deploy.yml`
 - `site-preview.yml` → `deploy-preview.yml`
-- `site-ci.yml` → `ci.yml` (enthält Dependabot-Merge nach grünem CI)
+- `site-ci.yml` → `ci.yml` (Dependabot-Merge nach grünem CI **und** anschließender Deploy-Trigger)
+
+> [!note] Krüger-Ausnahme im Merge-Job
+> `site-ci.yml` dispatcht nach dem Merge `deploy.yml`. Nutzt eine Site einen anderen Prod-Deploy-Workflow (Krüger: `deploy-strato-ftps.yml`), muss `workflow_id` im `merge-dependabot`-Job entsprechend angepasst werden.
 
 Alle referenzieren `pynnie/sh-webdesign-toolkit/.github/workflows/...@v1`.
 
 ## 4. Dependabot
 
-`.github/dependabot.yml` aus dem Toolkit kopieren (oder Symlink-Vorlage im Template-Repo).
+`.github/templates/dependabot.yml` aus dem Toolkit nach `.github/dependabot.yml` kopieren.
 
 ## 5. Playwright Smoke (empfohlen)
 

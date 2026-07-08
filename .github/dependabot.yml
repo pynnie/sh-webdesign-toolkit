@@ -1,33 +1,8 @@
+# Eigene Dependabot-Config des Toolkits. Dieses Repo hat kein package.json
+# (nur CI/Deploy-YAML) → KEIN npm-Ecosystem, sonst scheitert der Dependabot-Lauf.
+# Die Kopiervorlage für Site-Repos (inkl. npm) liegt in templates/dependabot.yml.
 version: 2
 updates:
-  - package-ecosystem: npm
-    directory: /
-    schedule:
-      interval: weekly
-      day: monday
-      time: "06:00"
-      timezone: Europe/Berlin
-    open-pull-requests-limit: 3
-    labels:
-      - dependencies
-    ignore:
-      # eslint-plugin-react (gebündelt in eslint-config-next) ist noch nicht
-      # ESLint-10-kompatibel — Major-Bumps erst nach Ökosystem-Support wieder zulassen
-      - dependency-name: eslint
-        update-types: ["version-update:semver-major"]
-    groups:
-      npm-patch-minor:
-        patterns:
-          - "*"
-        update-types:
-          - minor
-          - patch
-      npm-major:
-        patterns:
-          - "*"
-        update-types:
-          - major
-
   - package-ecosystem: github-actions
     directory: /
     schedule:
