@@ -53,6 +53,7 @@ jobs:
           name: static-export
           path: out/
           if-no-files-found: error
+          retention-days: 1
 
   smoke:
     needs: quality
